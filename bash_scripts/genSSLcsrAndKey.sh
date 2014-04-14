@@ -1,5 +1,15 @@
 #!/bin/bash
  
+#
+# This script was written by James Coyle 
+# http://www.jamescoyle.net/how-to/1073-bash-script-to-create-an-ssl-certificate-key-and-request-csr
+#
+# Stashed here on Github so that I don't have to remember where it is the next time I need it.
+#  
+# Modified to remove the passphrase generation and removal since it's unnecessary, and can be
+# generated without a password to begin with - James Andrews
+#
+ 
 #Required
 domain=$1
 commonname=$domain
@@ -12,9 +22,6 @@ organization=Jamescoyle.net
 organizationalunit=IT
 email=administrator@jamescoyle.net
  
-#Optional
-password=dummypassword
- 
 if [ -z "$domain" ]
 then
     echo "Argument not present."
@@ -24,17 +31,11 @@ then
 fi
  
 echo "Generating key request for $domain"
- 
-#Generate a key
-openssl genrsa -des3 -passout pass:$password -out $domain.key 2048 -noout
- 
-#Remove passphrase from the key. Comment the line out to keep the passphrase
-echo "Removing passphrase from key"
-openssl rsa -in $domain.key -passin pass:$password -out $domain.key
- 
+openssl genrsa -out $domain.key 2048
+
 #Create the request
 echo "Creating CSR"
-openssl req -new -key $domain.key -out $domain.csr -passin pass:$password \
+openssl req -new -key $domain.key -out $domain.csr \
     -subj "/C=$country/ST=$state/L=$locality/O=$organization/OU=$organizationalunit/CN=$commonname/emailAddress=$email"
  
 echo "---------------------------"
