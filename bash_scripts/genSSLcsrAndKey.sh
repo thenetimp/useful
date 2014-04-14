@@ -12,6 +12,7 @@
  
 #Required
 domain=$1
+quiet=$2
 commonname=$domain
  
 #Change to your company details
@@ -29,6 +30,11 @@ then
  
     exit 99
 fi
+
+if [ $quiet -eq "-q"]
+then    
+    quiet=true
+fi
  
 echo "Generating key request for $domain"
 openssl genrsa -out $domain.key 2048
@@ -38,15 +44,34 @@ echo "Creating CSR"
 openssl req -new -key $domain.key -out $domain.csr \
     -subj "/C=$country/ST=$state/L=$locality/O=$organization/OU=$organizationalunit/CN=$commonname/emailAddress=$email"
  
-echo "---------------------------"
-echo "-----Below is your CSR-----"
-echo "---------------------------"
+echo "Creating self signed certificate good for 365 days"
+openssl x509 -req -days 365 -in $domain.csr -signkey $domain.key -out $domain.crt
+
+if [ ! $quiet ]
+then    
+echo "-----------------------------------------"
+echo "-----       Below is your CSR       -----"
+echo "-----------------------------------------"
 echo
 cat $domain.csr
+fi
  
+if [ ! $quiet ]
+then    
 echo
-echo "---------------------------"
-echo "-----Below is your Key-----"
-echo "---------------------------"
+echo "-----------------------------------------"
+echo "-----       Below is your Key       -----"
+echo "-----------------------------------------"
 echo
 cat $domain.key
+fi
+
+if [ ! $quiet ]
+then    
+echo
+echo "-----------------------------------------"
+echo "----- Below is your self signed CRT -----"
+echo "-----------------------------------------"
+echo
+cat $domain.crt
+fi
